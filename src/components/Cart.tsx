@@ -24,6 +24,11 @@ class Cart extends React.Component<IProps, IState> {
     return (
       <AppStateContext.Consumer>
         {(appState) => {
+          const itemCount = appState.cart.items.reduce(
+            (count, item) => count + item.quantity,
+            0
+          )
+
           return (
             <div className={CartCss.cartContainer}>
               <button
@@ -36,7 +41,7 @@ class Cart extends React.Component<IProps, IState> {
                 }}
               >
                 <FiShoppingCart />
-                <span>{appState.cart.items.length} pizza(s)</span>
+                <span>{itemCount} pizza(s)</span>
               </button>
               <div
                 className={CartCss.cartDropDown}
@@ -46,7 +51,9 @@ class Cart extends React.Component<IProps, IState> {
               >
                 <ul>
                   {appState.cart.items.map((item) => (
-                    <li key={item.id}>{item.name} ({item.quantity})</li>
+                    <li key={item.id}>
+                      {item.name} ({item.quantity})
+                    </li>
                   ))}
                 </ul>
               </div>
