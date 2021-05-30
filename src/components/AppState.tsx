@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer } from 'react'
+import React, { createContext, useContext, useEffect, useReducer } from 'react'
 
 interface ICartItem {
   id: number
@@ -6,10 +6,12 @@ interface ICartItem {
   price: number
 }
 
+interface ICart {
+  items: (ICartItem & { quantity: number })[]
+}
+
 interface IAppState {
-  cart: {
-    items: (ICartItem & { quantity: number })[]
-  }
+  cart: ICart
 }
 
 const appStateDefaultValue: IAppState = {
@@ -20,10 +22,17 @@ const appStateDefaultValue: IAppState = {
 
 export const AppStateContext = createContext(appStateDefaultValue)
 
-export const AppDispatchContext = createContext<React.Dispatch<IAddToCartAction> | undefined>(undefined)
+export const AppDispatchContext =
+  createContext<React.Dispatch<IAddToCartAction> | undefined>(undefined)
 
 interface IAction<T> {
   type: T
+}
+
+interface IInitCartAction extends IAction<'INIT_CART'> {
+  payload: {
+    cart: ICart
+  }
 }
 
 interface IAddToCartAction extends IAction<'ADD_TO_CART'> {
@@ -32,34 +41,46 @@ interface IAddToCartAction extends IAction<'ADD_TO_CART'> {
   }
 }
 
-const appReducer = (appState: IAppState, action: IAddToCartAction) => {
-  const itemToAdd = action.payload.item
+const appReducer = (
+  appState: IAppState,
+  action: IInitCartAction | IAddToCartAction
+) => {
+  switch (action.type) {
+    case 'INIT_CART':
+      const cart = action.payload.cart  
 
-  if (action.type === 'ADD_TO_CART') {
-    const itemFound = !!appState.cart.items.find((item) => item.id === itemToAdd.id)
-   
-    return {
-      ...appState,
-      cart: {
-        ...appState.cart,
-        items: itemFound
-          ? appState.cart.items.map((item) =>
-              item.id !== itemToAdd.id
-                ? item
-                : { ...item, quantity: item.quantity + 1 }
-            )
-          : [
-              ...appState.cart.items,
-              {
-                ...itemToAdd,
-                quantity: 1,
-              },
-            ],
-      },
-    }
+      return {
+        ...appState,
+        cart
+      }
+    case 'ADD_TO_CART':
+      const itemToAdd = action.payload.item
+      const itemFound = !!appState.cart.items.find(
+        (item) => item.id === itemToAdd.id
+      )
+
+      return {
+        ...appState,
+        cart: {
+          ...appState.cart,
+          items: itemFound
+            ? appState.cart.items.map((item) =>
+                item.id !== itemToAdd.id
+                  ? item
+                  : { ...item, quantity: item.quantity + 1 }
+              )
+            : [
+                ...appState.cart.items,
+                {
+                  ...itemToAdd,
+                  quantity: 1,
+                },
+              ],
+        },
+      }
+    default:
+      return appState
   }
-
-  return appState
 }
 
 export const useAppDispatch = () => {
@@ -76,6 +97,29 @@ export const useAppDispatch = () => {
 
 const AppStateProvider: React.FC = ({ children }) => {
   const [appState, appDispatch] = useReducer(appReducer, appStateDefaultValue)
+
+  useEffect(() => {
+    const cartJson = window.localStorage.getItem('cart')
+
+    if (!cartJson) {
+      return
+    }
+
+    try {
+      const cart = JSON.parse(cartJson) as ICart
+
+      appDispatch({
+        type: 'INIT_CART',
+        payload: { cart }
+      })
+    } catch (error) {
+      console.error('Failed to parse cart from local storage!')
+    }
+  }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem('cart', JSON.stringify(appState.cart))
+  }, [appState.cart])
 
   return (
     <AppStateContext.Provider value={appState}>
