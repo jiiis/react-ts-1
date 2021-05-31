@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react'
 
-interface ICartItem {
+export interface ICartItem {
   id: number
   name: string
   price: number
