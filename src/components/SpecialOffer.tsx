@@ -1,23 +1,29 @@
 import React from 'react'
 
 import { IPizza } from '../types'
-import { IAddToCartProps, withAddToCart } from './AddToCart'
+import { WithAddToCartProps } from './AddToCart'
 
 import SpecialOfferCss from './SpecialOffer.module.css'
 
-interface IProps extends IAddToCartProps {
+interface IProps {
   pizza: IPizza
 }
 
-const SpecialOffer: React.FC<IProps> = ({ pizza, addToCart }) => {  
+const SpecialOffer: React.FC<IProps> = ({ pizza }) => {
   return (
     <div className={SpecialOfferCss.container}>
       <h2>{pizza.name}</h2>
       <p>{pizza.description}</p>
       <p>{pizza.price}</p>
-      <button onClick={addToCart.bind(null, pizza)}>Add to cart</button>
+      <WithAddToCartProps>
+        {({ addToCart }) => {
+          return (
+            <button onClick={addToCart.bind(null, pizza)}>Add to cart</button>
+          )
+        }}
+      </WithAddToCartProps>
     </div>
   )
 }
 
-export default withAddToCart(SpecialOffer)
+export default SpecialOffer

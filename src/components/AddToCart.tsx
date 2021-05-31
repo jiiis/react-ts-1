@@ -6,6 +6,8 @@ export interface IAddToCartProps {
   addToCart: (item: ICartItem) => void
 }
 
+// Approach 1 to share functionalities among components.
+// Use a higher order component.
 export function withAddToCart<OriginalProps extends IAddToCartProps>(
   ChildComponent: React.ComponentType<OriginalProps>
 ) {
@@ -23,4 +25,21 @@ export function withAddToCart<OriginalProps extends IAddToCartProps>(
   }
 
   return AddToCartHOC
+}
+
+// Approach 2 to share functionalities among components.
+// Use a render props component.
+export const WithAddToCartProps: React.FC<{
+  children: (props: IAddToCartProps) => JSX.Element
+}> = ({ children }) => {
+  const appDispatch = useAppDispatch()
+
+  const addToCart: IAddToCartProps['addToCart'] = (item) => {
+    appDispatch({
+      type: 'ADD_TO_CART',
+      payload: { item },
+    })
+  }
+
+  return children({ addToCart })
 }
