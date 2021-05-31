@@ -43,3 +43,18 @@ export const WithAddToCartProps: React.FC<{
 
   return children({ addToCart })
 }
+
+// Approach 3 to share functionalities among components.
+// Use a custom hook.
+export const useAddToCart = () => {
+  const appDispatch = useAppDispatch()
+
+  const addToCart: IAddToCartProps['addToCart'] = (item) => {
+    appDispatch({
+      type: 'ADD_TO_CART',
+      payload: { item },
+    })
+  }
+
+  return addToCart
+}
